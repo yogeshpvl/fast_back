@@ -120,20 +120,33 @@ async function agentLogin(req, res) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
+    if (!agent || agent.status !== "approved") {
+      return res.status(400).json({ error: "Your account is not approved. Please contact support." });
+    }
+    
     // Validate password
     const isPasswordValid = await bcrypt.compare(password, agent.password);
     if (!isPasswordValid) {
       return res.status(400).json({ error: "Invalid email or password" });
     }
 
-    // Generate a token with an expiry of 1 hour
-    const token = jwt.sign({ email }, JWT_SECRET_KEY, { expiresIn: "1h" });
+    // Generate a token with an expiry of 1 day
+    const token = jwt.sign({ email }, JWT_SECRET_KEY, { expiresIn: "1d" });
 
-    res.status(200).json({ success: "Logged in successfully", token });
+    // Send only required fields
+    const userData = {
+      id: agent._id,
+      name: agent.name,
+      email: agent.email,
+      status: agent.status
+    };
+
+    res.status(200).json({ success: "Logged in successfully", token, data: userData });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 }
+
 async function pendingStatus(req, res) {
   try {
     const data = await agentModel.find({ status: "pending" }).sort({ _id: -1 });

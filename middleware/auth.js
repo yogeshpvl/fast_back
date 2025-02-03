@@ -11,7 +11,7 @@ function userMiddleware(req, res, next) {
     // Verify token
     const decoded = jwt.verify(token, JWT_SECRET_KEY);
     req.email = decoded.email;
-    req.random = "rentangadi";
+    req.random = "fasttopkeyscrete";
     next();
   } catch (error) {
     if (error.name === "TokenExpiredError") {

@@ -37,7 +37,7 @@ class banner {
       }
 
       if (banner && banner.length > 0) {
-        return res.json({ banner });
+        return res.json({ data:banner });
       } else {
         return res.status(404).json({ error: "Banner not found" });
       }
@@ -49,6 +49,7 @@ class banner {
 
   async postdeletebanner(req, res) {
     let id = req.params.id;
+    console.log("id: " +id)
     const data = await bannerModel.deleteOne({ _id: id });
 
     return res.json({ success: "Successfully" });

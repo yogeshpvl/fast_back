@@ -26,9 +26,14 @@ app.use(express.static("public"));
 
 const adminLogin = require("./route/Auth/adminLogin");
 const agentAuth = require("./route/Auth/agentAuth");
+const tags = require("./route/tags");
+const banner = require("./route/banner");
+
 
 app.use("/api/subpartner", adminLogin);
 app.use("/api/agent", agentAuth);
+app.use("/api/tags", tags);
+app.use("/api/banner", banner);
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {
