@@ -4,17 +4,26 @@ const agentModel =require("../model/Auth/agentAuth");
 
 class TagController {
   // Create a new tag
-  async createTag(req, res) {
 
+  async createTag(req, res) {
     try {
-        const { tags } = req.body; // Expecting an array of tags
-        const newTags = await TagModel.insertMany(tags);
-        res.status(201).json(newTags);
-      } catch (error) {
-        res.status(500).json({ message: error.message });
-      }
-    
+      const { tags, createdBy, createdId } = req.body; // Expecting an array of tags
+  
+      console.log("cretedBy0", createdBy, createdId)
+      // Ensure each tag includes createdBy and createdId
+      const newTags = tags.map(tag => ({
+        ...tag,
+        createdBy,
+        createdId
+      }));
+  
+      const insertedTags = await TagModel.insertMany(newTags);
+      res.status(201).json(insertedTags);
+    } catch (error) {
+      res.status(500).json({ message: error.message });
+    }
   }
+  
 
   // Get all tags
   async getAllTags(req, res) {
@@ -41,8 +50,10 @@ class TagController {
    async getTagsByAgent(req, res) {
     try {
       const { agentId } = req.params;
+      console.log("Agent", agentId);
       const tags = await TagModel.find({ assignedTo: agentId }).populate("assignedTo", "name email");
       if (!tags.length) return res.status(404).json({ message: "No tags found for this agent" });
+      console.log("tags ---", tags);
       return res.status(200).json(tags);
     } catch (err) {
       return res.status(500).json({ message: err.message });

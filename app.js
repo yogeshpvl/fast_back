@@ -28,12 +28,22 @@ const adminLogin = require("./route/Auth/adminLogin");
 const agentAuth = require("./route/Auth/agentAuth");
 const tags = require("./route/tags");
 const banner = require("./route/banner");
+const vehicleRoutes = require("./route/Vehicle");
+
+//api
+
+const custRegRoutes = require("./route/customer/custReg");
 
 
 app.use("/api/subpartner", adminLogin);
 app.use("/api/agent", agentAuth);
 app.use("/api/tags", tags);
 app.use("/api/banner", banner);
+app.use("/api/vehicle", vehicleRoutes);
+
+//api routes
+app.use("/api/customer", custRegRoutes);
+
 
 const PORT = process.env.PORT || 8000;
 app.listen(PORT, () => {

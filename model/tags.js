@@ -24,6 +24,15 @@ const tagsSchema = new mongoose.Schema({
     ref: "agent", // Reference to Agent model
 
   },
+  createdBy: {
+    type: String,
+    
+  },
+  createdId: {
+    type: mongoose.Schema.Types.ObjectId,
+    
+    
+  },
 }, { timestamps: true }); 
 
 const TagModel = mongoose.model("Tag", tagsSchema);

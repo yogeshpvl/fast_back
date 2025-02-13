@@ -1,0 +1,128 @@
+const mongoose = require("mongoose");
+
+const VehicleSchema = new mongoose.Schema({
+  dateInfo: [
+    {
+      date: String,
+      dateType: String,
+    },
+  ],
+  communicationInfo: [
+    {
+      emailId: String,
+      notification: Boolean,
+      contactNo: String,
+    },
+  ],
+  addressInfo: [
+    {
+      pincode: Number,
+      country: String,
+      state: String,
+      city: String,
+      address1: String,
+      address2: String,
+      address3: String,
+      addressCategory: String,
+    },
+  ],
+  kycInfo: [
+    {
+      documentNo: String,
+      documentType: String,
+      kycRefNo: String,
+    },
+  ],
+  kitInfo: [
+    {
+      cardType: String,
+      cardCategory: String,
+      cardRegStatus: String,
+      aliasName: String,
+    },
+  ],
+  kycDocuments: [
+    {
+      documentType: String,
+      documentFileName: String,
+    },
+  ],
+  customerStatus: String,
+  countryCode: String,
+  channelName: String,
+  kycStatus: String,
+  fatcaDecl: String,
+  consent: String,
+  politicallyExposed: String,
+  entityType: String,
+  businessType: String,
+  business: String,
+  businessId: String,
+  specialDate: String,
+  branch: String,
+  corporate: String,
+  entityId: String,
+  countryofIssue: String,
+  dependent: Boolean,
+  fleetAddField: {
+    applicationDate: String,
+    applicationNumber: String,
+    entityId: String,
+    customerType: String,
+    registrationDate: String,
+    isCommercial: String,
+  },
+  otp: String,
+  contactNo: String,
+  city: String,
+  state: String,
+  pincode: Number,
+  address2: String,
+  address: String,
+  dap: String,
+  idNumber: String,
+  proofType: String,
+  dob: String,
+  gender: String,
+  lastName: String,
+  firstName: String,
+  emailAddress: String,
+  country: String,
+  reqBranch: String,
+  preference: {
+    address: [
+      {
+        country: String,
+        city: String,
+        address1: String,
+        address2: String,
+      },
+    ],
+  },
+  title: String,
+  idExpiry: String,
+  programType: String,
+  parentEntityId: String,
+  documents: [
+    {
+      docExpDate: String,
+      docType: String,
+    },
+  ],
+  idType: String,
+  color: String,
+  kitNo: String,
+  profileId: String,
+  tagId: String,
+  comVehicle: String,
+  engineNo: String,
+  vin: String,
+  vrn: String,
+  stateCode: String,
+  nationalPermit: String,
+  registeredVehicle: String,
+  vehicleDescriptor: String,
+  nationalPermitDate: String,
+});
+
+module.exports = mongoose.model("Vehicle", VehicleSchema);
