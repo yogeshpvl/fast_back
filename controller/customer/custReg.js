@@ -1,121 +1,164 @@
-const config = require("../../config/config");
-const CustRegModel = require("../../model/customer/custReg");
+// controllers/registerCustomer.js
+const axios = require('axios');
+const Customer = require('../../model/customer/customer');
+const generateEntityId = require('../../utils/generateEntityId');
 
-// Create a new customer registration
-const axios = require("axios");
 
-
-exports.createCustomer = async (req, res) => {
-
-  console.log(req.body)
-
-  const headers = {
-    TENANT: process.env.TENANT,
-    partnerId: process.env.PARTNER_ID,
-    partnerToken: process.env.PARTNER_TOKEN,
-    "Content-Type": "application/json",
-  };
-
+const removeFromHotlist = async (kitNo) => {
   try {
     const response = await axios.post(
-      config.CUSTOMER_REGISTER_WITH_OTP,
-      req.body,
-      { headers }
+      "https://uat-fleetdrive.m2pfintech.com/core/Yappay/fleet-manager/UnregisteredNegativeList",
+      {
+        kitNo,
+        excCode: "01",
+        tagOperation: "ADD",
+      },
+      {
+        headers: {
+          TENANT: "LQFLEET",
+          "Content-Type": "application/json",
+        },
+      }
     );
-
-    if (response.data?.status === "SUCCESS") {
-      const newCustomer = new CustRegModel({
-        entityId: response.data.entityId,
-        token: response.data.token,
-        agentId: req.params.agentId,
-        contactNo: req.body.customerId,
-        firstName: req.body.firstName,
-        lastName: req.body.lastName,
-        email: req.body.email,
-        phoneNumber: req.body.phoneNumber,
-      });
-
-      await newCustomer.save();
-      return res.status(201).json({ success: true, data: newCustomer });
+    return response.data;
+  } catch (error) {
+    // Check if error.response exists (when the error comes from the server)
+    if (error.response) {
+      // Server responded with a status code outside the 2xx range
+      console.error("Error response status:", error.response.status);
+      console.error("Error response headers:", error.response.headers);
+      console.error("Error response data:", error.response.data);
+      // You can create a more descriptive error message or log it as per your requirement
+      throw new Error(`Failed to remove tag from hotlist: ${error.response.data?.message || error.response.statusText || "Unknown error"}`);
+    } else if (error.request) {
+      // The request was made but no response was received
+      console.error("Error request:", error.request);
+      throw new Error("No response received from the server.");
     } else {
-      console.error("API Error:", response.data);
-      return res.status(400).json({
-        success: false,
-        message: response.data?.message || "Failed to register customer.",
+      // Something else triggered the error
+      console.error("Error message:", error.message);
+      throw new Error(`Unexpected error: ${error.message}`);
+    }
+  }
+};
+
+
+exports.registerCustomer = async (req, res) => {
+  try {
+    const data = req.body;
+    const {customerNumber,agentId}=req.query;
+    const {emailAddress,dob,gender,firstName,lastName,addressInfo}=req.body;
+    const entityId = generateEntityId(); 
+    const businessId = generateEntityId(); 
+
+
+
+
+    // Include entityId in payload
+    const payload = {
+      ...data,
+      entityId,businessId
+    };
+
+    // Log the payload for debugging purposes
+    console.log("Payload being sent:", JSON.stringify(payload, null, 2));
+
+    try {
+      const response = await axios.post('https://kycuat.yappay.in/kyc/v2/register', payload, {
+        headers: {
+          'TENANT': 'LQFLEET',
+          'partnerId': 'LQFLEET',
+          'partnerToken': 'Basic TFFGTEVFVA',
+          'Content-Type': 'application/json'
+        }
+      });
+    
+      const result = response.data.result;
+      console.log("Registration successful:", result);
+
+     
+      
+        const updatedCustomer = await Customer.findOneAndUpdate(
+          { contactNo:customerNumber },
+          { $set: { entityId, token:result?.token, agentId , address:addressInfo,emailAddress,firstName,lastName,gender,dob} },
+          { new: true }
+        );
+        
+        if (!updatedCustomer) {
+          console.error("Customer not found for contactNo:", customerNumber);
+        }
+      
+
+      // Respond with success
+      res.status(200).json({
+        message: 'Customer registered successfully',
+        entityId,
+        updatedCustomer
+        // You can send additional data if needed, e.g., kitNo, token, etc.
+      });
+    } catch (error) {
+      console.error("API Response Error:", error.response?.data);
+
+      // Log the entire error response
+      console.error("Registration API error:", error );
+      res.status(400).json({
+        message: 'Registration failed',
+        error: error.response?.data || error.message
       });
     }
   } catch (error) {
-    console.error(
-      "Error:",
-      error.response ? error.response.data : error.message
+   
+    res.status(500).json({
+      message: "Registration failed",
+      error: error?.response?.data || error.message
+    });
+  }
+};
+
+
+
+
+
+
+
+
+exports.registerVehicle = async (req, res) => {
+  const { kitNo, entityId,  } = req.body;
+
+  console.log("req.body",req.body)
+
+  try {
+    // Step 1: Remove from hotlist before registering
+    // const hotlistResponse = await removeFromHotlist(kitNo);
+    // console.log("Hotlist Removal Response:", hotlistResponse);
+
+    // Step 2: Proceed with vehicle registration
+    const registrationResponse = await axios.post(
+      "https://uat-fleetdrive.m2pfintech.com/core/Yappay/registration-manager/v3/register",
+      {
+        ...req.body,
+        entityId,
+      },
+      {
+        headers: {
+          Authorization: "Basic TFFGTEVFVA==",
+          "Content-Type": "application/json",
+          TENANT: "LQFLEET",
+        },
+      }
     );
 
-    const errorMessage =
-      error.response?.data?.exception?.shortMessage ||
-      error.response?.data?.detailMessage ||
-      "An error occurred during registration.";
+    // Save to DB and return response
+    // Assuming you have a Vehicle model:
+    const savedVehicle = await Vehicle.create({
+      ...req.body,
+      registrationResponse: registrationResponse.data,
+    });
 
-    return res.status(500).json({ success: false, message: errorMessage });
-  }
-};
-
-// Get all customer registrations
-exports.getAllCustomers = async (req, res) => {
-  try {
-    const customers = await CustRegModel.find();
-    res.status(200).json({ success: true, data: customers });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// Get a single customer by ID
-exports.getCustomerById = async (req, res) => {
-  try {
-    const customer = await CustRegModel.findById(req.params.id);
-    if (!customer) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Customer not found" });
-    }
-    res.status(200).json({ success: true, data: customer });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// Update a customer by ID
-exports.updateCustomer = async (req, res) => {
-  try {
-    const updatedCustomer = await CustRegModel.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true }
-    );
-    if (!updatedCustomer) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Customer not found" });
-    }
-    res.status(200).json({ success: true, data: updatedCustomer });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
-  }
-};
-
-// Delete a customer by ID
-exports.deleteCustomer = async (req, res) => {
-  try {
-    const deletedCustomer = await CustRegModel.findByIdAndDelete(req.params.id);
-    if (!deletedCustomer) {
-      return res
-        .status(404)
-        .json({ success: false, message: "Customer not found" });
-    }
-    res
-      .status(200)
-      .json({ success: true, message: "Customer deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(200).json({ success: true, vehicle: savedVehicle });
+  } catch (err) {
+    console.error("Error response data:", err.response.data);
+    console.error("Registration Error:", err.message);
+    res.status(500).json({ success: false, message: err.message });
   }
 };

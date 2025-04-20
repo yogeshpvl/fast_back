@@ -16,20 +16,29 @@ const tagsSchema = new mongoose.Schema({
 
   },
   assignedTo: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: "agent", // Reference to Agent model
+    type: String,
+    ref: "agent", 
   },
   agentName: {
     type: String,
     ref: "agent", // Reference to Agent model
 
   },
+  tagClass:{
+    type: String,
+  },
+  mapperClass:{
+    type: String,
+  },
+  color:{
+    type: String,
+  },
   createdBy: {
     type: String,
     
   },
   createdId: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: String,
     
     
   },

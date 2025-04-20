@@ -1,11 +1,10 @@
-const express = require("express");
+// routes/customer.js
+const express = require('express');
 const router = express.Router();
-const customerController = require("../../controller/customer/custReg");
+const { registerCustomer,registerVehicle } = require('../../controller/customer/custReg');
 
-router.post("/:agentId", customerController.createCustomer);
-router.get("/", customerController.getAllCustomers);
-router.get("/:id", customerController.getCustomerById);
-router.put("/:id", customerController.updateCustomer);
-router.delete("/:id", customerController.deleteCustomer);
+router.post('/register-with-otp', registerCustomer);
+router.post('/vehicle-registration',registerVehicle);
+
 
 module.exports = router;

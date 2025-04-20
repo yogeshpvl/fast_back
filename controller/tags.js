@@ -7,14 +7,14 @@ class TagController {
 
   async createTag(req, res) {
     try {
-      const { tags, createdBy, createdId } = req.body; // Expecting an array of tags
+      const { tags, createdBy, createdId} = req.body; // Expecting an array of tags
   
-      console.log("cretedBy0", createdBy, createdId)
+     
       // Ensure each tag includes createdBy and createdId
       const newTags = tags.map(tag => ({
         ...tag,
         createdBy,
-        createdId
+        createdId,
       }));
   
       const insertedTags = await TagModel.insertMany(newTags);
@@ -28,7 +28,7 @@ class TagController {
   // Get all tags
   async getAllTags(req, res) {
     try {
-      const tags = await TagModel.find().populate("assignedTo", "name"); // Populates assigned agent name
+      const tags = await TagModel.find({})
       return res.status(200).json(tags);
     } catch (err) {
       return res.status(500).json({ message: err.message });
@@ -53,7 +53,7 @@ class TagController {
       console.log("Agent", agentId);
       const tags = await TagModel.find({ assignedTo: agentId }).populate("assignedTo", "name email");
       if (!tags.length) return res.status(404).json({ message: "No tags found for this agent" });
-      console.log("tags ---", tags);
+    
       return res.status(200).json(tags);
     } catch (err) {
       return res.status(500).json({ message: err.message });
@@ -76,6 +76,7 @@ class TagController {
     try {
         const { tags, agentId ,agentName} = req.body;
     
+        console.log("tags")
         // Validate input
         if (!tags || !Array.isArray(tags) || tags.length === 0) {
           return res.status(400).json({ error: "No tags provided for assignment" });
