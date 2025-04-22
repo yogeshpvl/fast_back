@@ -8,7 +8,9 @@ const {
   updateAgentStatus,
   deleteAgent,
   editAgent,
-  particulrSubpartnerAgents
+  particulrSubpartnerAgents,
+  DeductmoneyFromWallet,
+  getAgentCount
 } = require("../../controller/Auth/agentAuth");
 const userMiddleware = require("../../middleware/auth");
 
@@ -17,6 +19,9 @@ router.post("/agentSignUp", agentSignUp);
 
 // Login route
 router.post("/agentLogin", agentLogin);
+router.post("/deductWallet/:agentId/:amount",   DeductmoneyFromWallet);
+
+router.get("/counts", getAgentCount);
 
 router.get("/pendingStatus", pendingStatus);
 router.get("/getAllAgents", getAllAgents);

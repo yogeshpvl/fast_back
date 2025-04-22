@@ -43,6 +43,8 @@ const vehicleRoutes = require("./route/Vehicle");
 const custRegRoutes = require("./route/customer/custReg");
 const paymentHistory = require("./model/paymentHistory");
 const customerRoutes = require('./route/customer/customer');
+const walletRoutes = require("./route/paymentHistory"); // adjust path
+
 
 
 app.use("/api/subpartner", adminLogin);
@@ -54,7 +56,7 @@ app.use("/api/vehicle", vehicleRoutes);
 //api routes
 app.use("/api/customer", custRegRoutes);
 app.use('/api/customer', customerRoutes);
-
+app.use("/", walletRoutes);
 
 // ✅ Create Razorpay Order
 app.post("/create-order", async (req, res) => {
@@ -151,7 +153,7 @@ app.get("/wallet-details/:agentId", async (req, res) => {
 
     // ✅ Fetch agent details
     const agent = await agentModel.findOne({ _id:agentId });
-console.log("agent",agent)
+
     if (!agent) {
       return res.status(404).json({ message: "Agent not found" });
     }
@@ -159,7 +161,7 @@ console.log("agent",agent)
     // ✅ Fetch transaction history
     const transactions = await PaymentHistory.find({ agentId }).sort({ createdAt: -1 });
 
-    console.log("agent.wallet",agent.wallet,transactions )
+  
     res.json({ balance: agent.wallet || 0, transactions });
   } catch (error) {
     console.error("❌ Error fetching wallet details:", error);

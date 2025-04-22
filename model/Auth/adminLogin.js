@@ -46,6 +46,10 @@ const adminSchema = new mongoose.Schema(
       required: true,
       default: "active",
     },
+    type:{
+      type: String,
+      required: true,
+    },
     wallet: {
       type: Number,
       required: true,

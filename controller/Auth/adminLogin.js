@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 
 async function adminSignUp(req, res) {
   try {
-    const { name, email, password,number, role, status, state, city, address } =
+    const { name, email, password,number, role, status, state,type, city, address } =
       req.body;
 
      
@@ -26,7 +26,7 @@ async function adminSignUp(req, res) {
       city,
       number,
       address,
-
+type,
       password: await bcrypt.hash(password, 10),
     });
 
@@ -42,7 +42,7 @@ async function adminSignUp(req, res) {
 
 async function adminUpdate(req, res) {
   try {
-    const { name, email, password,number, role, status, state, city, address } =
+    const { name, email, password,number, role, status, state, city,type, address } =
     req.body;
 
   const {id} = req.params
@@ -59,6 +59,7 @@ async function adminUpdate(req, res) {
       admin.state = state || admin.state;
       admin.city = city || admin.city;
       admin.address = address || admin.address;
+      admin.type = type || admin.type;
 
       // Update password only if a new password is provided
       if (password) {
@@ -83,6 +84,7 @@ async function adminUpdate(req, res) {
         city,
         number,
         address,
+        type,
         password: await bcrypt.hash(password, 10), // Hash the password
       });
 
@@ -199,11 +201,22 @@ async function getSubpartners(req, res) {
   }
 }
 
+async function getSubpartnerCount(req, res) {
+  try {
+    const count = await AdminModel.countDocuments({ role: 'subpartner' });
+
+    res.status(200).json({ success: "total subpartner count", count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
 module.exports = {
   adminSignUp,
   adminLogin,
   giveRightsSubpartners,
   getSubpartners,
   subpartnerCount,
-  adminUpdate
+  adminUpdate,
+  getSubpartnerCount
 };

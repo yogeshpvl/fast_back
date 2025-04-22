@@ -2,6 +2,7 @@ const agentModel = require("../../model/Auth/agentAuth");
 const JWT_SECRET_KEY = require("../../config/jwtSecret");
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const paymentHistory = require("../../model/paymentHistory");
 
 async function agentSignUp(req, res, next) {
   try {
@@ -201,6 +202,17 @@ async function getAllAgents(req, res) {
   }
 }
 
+async function getAgentCount(req, res) {
+  try {
+    const count = await agentModel.countDocuments();
+
+    res.status(200).json({ success: "total agent count", count });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
+
+
 async function updateAgentStatus(req, res) {
   const { id } = req.params;
 
@@ -221,6 +233,50 @@ async function updateAgentStatus(req, res) {
       data: updatedAgent,
     });
   } catch (error) {
+    res.status(500).json({ error: error.message || "Internal Server Error" });
+  }
+}
+
+async function DeductmoneyFromWallet(req, res) {
+  const { agentId, amount } = req.params;
+  const { reason } = req.body;
+
+  try {
+    // Convert amount to number
+    const deductAmount = parseFloat(amount);
+
+    // Find the agent
+    const agent = await agentModel.findById(agentId);
+    if (!agent) {
+      return res.status(404).json({ error: "Agent not found" });
+    }
+
+    // Check if wallet has sufficient balance
+    if (agent.wallet < deductAmount) {
+      return res.status(400).json({ error: "Insufficient wallet balance" });
+    }
+
+    // Deduct the amount
+    agent.wallet -= deductAmount;
+    await agent.save();
+
+    // Create payment history record
+    const paymentRecord = new paymentHistory({
+      agentId,
+      amount: deductAmount,
+      status: "Debit",
+      reason: reason,
+      createdAt: new Date(),
+    });
+    await paymentRecord.save();
+
+    res.status(200).json({
+      success: "Amount deducted successfully",
+      data: agent,
+    });
+
+  } catch (error) {
+    console.log("err",error)
     res.status(500).json({ error: error.message || "Internal Server Error" });
   }
 }
@@ -254,5 +310,7 @@ module.exports = {
   updateAgentStatus,
   deleteAgent,
   editAgent,
-  particulrSubpartnerAgents
+  particulrSubpartnerAgents,
+  DeductmoneyFromWallet,
+  getAgentCount
 };
