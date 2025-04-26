@@ -2,6 +2,7 @@
 const axios = require('axios');
 const Customer = require('../../model/customer/customer');
 const generateEntityId = require('../../utils/generateEntityId');
+const agentModel = require('../../model/Auth/agentAuth');
 
 
 const removeFromHotlist = async (kitNo) => {
@@ -80,7 +81,7 @@ exports.registerCustomer = async (req, res) => {
       
         const updatedCustomer = await Customer.findOneAndUpdate(
           { contactNo:customerNumber },
-          { $set: { entityId, token:result?.token, agentId , address:addressInfo,emailAddress,firstName,lastName,gender,dob} },
+          { $set: { entityId, token:result?.token, agentId , address:addressInfo,emailAddress,firstName,lastName,gender,dob,status:"CUSTOMER REGISTERED"} },
           { new: true }
         );
         
@@ -116,15 +117,9 @@ exports.registerCustomer = async (req, res) => {
 };
 
 
-
-
-
-
-
-
 exports.registerVehicle = async (req, res) => {
-  const { kitNo, entityId,  } = req.body;
-
+  const { kitNo, entityId, type,agentId,amount } = req.body;
+  const deductAmount = parseFloat(amount);
   console.log("req.body",req.body)
 
   try {
@@ -154,7 +149,18 @@ exports.registerVehicle = async (req, res) => {
       ...req.body,
       registrationResponse: registrationResponse.data,
     });
-
+    if(type === "Prepaid"){
+      const agent = await agentModel.findById(agentId);
+      agent.wallet -= deductAmount;
+      await agent.save();
+  
+    }
+    const updatedCustomer = await Customer.findOneAndUpdate(
+      { entityId:entityId ,kitNo:req.body.kitNo},
+      { $set: {status:"VEHICLE REGISTERED"} },
+      { new: true }
+    );
+    
     res.status(200).json({ success: true, vehicle: savedVehicle });
   } catch (err) {
     console.error("Error response data:", err.response.data);

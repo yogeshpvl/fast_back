@@ -47,6 +47,10 @@ const walletRoutes = require("./route/paymentHistory"); // adjust path
 
 
 
+const adminReportRoutes = require('./route/report/report');
+app.use('/api/admin/report', adminReportRoutes);
+
+
 app.use("/api/subpartner", adminLogin);
 app.use("/api/agent", agentAuth);
 app.use("/api/tags", tags);

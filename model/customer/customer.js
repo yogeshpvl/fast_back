@@ -12,6 +12,13 @@ const customerSchema = new mongoose.Schema({
   contactNo: String,
   emailAddress: String,
   panNumber: String,
+  kitNo: String,
+  tagClass:{
+    type: String,
+  },
+  mapperClass:{
+    type: String,
+  },
   address: {
     address1: String,
     address2: String,
@@ -21,6 +28,10 @@ const customerSchema = new mongoose.Schema({
     pincode: String
   },
   otp: String,
+  status: {
+    type: String,
+     default: "Pending",
+  },
  
 }, { timestamps: true });
 

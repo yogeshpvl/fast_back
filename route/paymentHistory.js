@@ -1,25 +1,39 @@
 const express = require("express");
 const router = express.Router();
 const PaymentHistory = require("../model/paymentHistory");
+const Agent = require("../model/Auth/agentAuth");
 
 
-/**
- * @route   GET /payments-details?page=1&limit=10
- * @desc    Fetch paginated payment history with agent details
- */
+
+
 router.get("/payments-details", async (req, res) => {
   try {
     const page = parseInt(req.query.page) || 1;
     const limit = parseInt(req.query.limit) || 10;
     const skip = (page - 1) * limit;
 
-    const total = await PaymentHistory.countDocuments();
+    const { startDate, endDate, agentId } = req.query;
 
-    const transactions = await PaymentHistory.find({status:"Success"})
+    const filter = { status: "Success" };
+
+    if (startDate && endDate) {
+      filter.createdAt = {
+        $gte: new Date(startDate),
+        $lte: new Date(endDate),
+      };
+    }
+
+    if (agentId) {
+      filter.agentId = agentId;
+    }
+
+    const total = await PaymentHistory.countDocuments(filter);
+
+    const transactions = await PaymentHistory.find(filter)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit)
-      // .populate("agentId", "name number email city state"); 
+      .populate("agentId", "name number email city state"); // populate agent info
 
     res.status(200).json({
       page,
@@ -33,6 +47,7 @@ router.get("/payments-details", async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   }
 });
+
 
 
 router.get("/total-amount-success", async (req, res) => {

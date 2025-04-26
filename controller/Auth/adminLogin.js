@@ -5,7 +5,7 @@ const bcrypt = require("bcrypt");
 
 async function adminSignUp(req, res) {
   try {
-    const { name, email, password,number, role, status, state,type, city, address } =
+    const { name, email, password,number, role, status, state,type, city, address,fastTagPrice } =
       req.body;
 
      
@@ -27,6 +27,7 @@ async function adminSignUp(req, res) {
       number,
       address,
 type,
+fastTagPrice,
       password: await bcrypt.hash(password, 10),
     });
 
@@ -42,7 +43,7 @@ type,
 
 async function adminUpdate(req, res) {
   try {
-    const { name, email, password,number, role, status, state, city,type, address } =
+    const { name, email, password,number, role, status, state, city,type, address,fastTagPrice } =
     req.body;
 
   const {id} = req.params
@@ -60,6 +61,8 @@ async function adminUpdate(req, res) {
       admin.city = city || admin.city;
       admin.address = address || admin.address;
       admin.type = type || admin.type;
+      admin.fastTagPrice =  fastTagPrice || admin.fastTagPrice;
+     
 
       // Update password only if a new password is provided
       if (password) {
@@ -201,6 +204,18 @@ async function getSubpartners(req, res) {
   }
 }
 
+async function getSubpartnerDatails(req, res) {
+  try {
+    const {id}=req.params.id
+    const data = await AdminModel.findOne({_id:id}).sort({ _id: -1 });
+
+    if (data) {
+      res.status(200).json({ success: "subpatners data", data });
+    }
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+}
 async function getSubpartnerCount(req, res) {
   try {
     const count = await AdminModel.countDocuments({ role: 'subpartner' });
@@ -211,6 +226,42 @@ async function getSubpartnerCount(req, res) {
   }
 }
 
+async function changePassword(req, res) {
+  try {
+    const { email, oldPassword, newPassword } = req.body;
+
+    console.log("email",email)
+    if (!email || !oldPassword || !newPassword) {
+      return res.status(400).json({ success: false, message: "Email, oldPassword, and newPassword are required" });
+    }
+
+  
+    // Find the admin by email
+    const admin = await AdminModel.findOne({ email });
+
+    console.log("admin",admin)
+    if (!admin) {
+      return res.status(404).json({ success: false, message: "Admin not found" });
+    }
+
+    // Compare old password
+    const isMatch = await bcrypt.compare(oldPassword, admin.password);
+    if (!isMatch) {
+      return res.status(401).json({ success: false, message: "Old password is incorrect" });
+    }
+
+    // Hash new password and update
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    admin.password = hashedPassword;
+    await admin.save();
+
+    return res.status(200).json({ success: true, message: "Password updated successfully" });
+
+  } catch (error) {
+    console.error("Error changing password:", error);
+    return res.status(500).json({ success: false, message: "Internal server error" });
+  }
+};
 module.exports = {
   adminSignUp,
   adminLogin,
@@ -218,5 +269,7 @@ module.exports = {
   getSubpartners,
   subpartnerCount,
   adminUpdate,
-  getSubpartnerCount
+  getSubpartnerCount,
+  getSubpartnerDatails,
+  changePassword
 };

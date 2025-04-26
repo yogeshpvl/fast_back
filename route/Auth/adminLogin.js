@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const { adminSignUp, adminLogin ,getSubpartners,subpartnerCount,adminUpdate, getSubpartnerCount} = require("../../controller/Auth/adminLogin");
+const { adminSignUp, adminLogin , changePassword,getSubpartnerDatails,getSubpartners,subpartnerCount,adminUpdate, getSubpartnerCount} = require("../../controller/Auth/adminLogin");
 const userMiddleware = require("../../middleware/auth");
 const AdminModel = require("../../model/Auth/adminLogin");
 
@@ -10,6 +10,10 @@ router.post("/adminSignUp", adminSignUp);
 // Login route
 router.post("/adminLogin", adminLogin);
 router.get("/getSubpartners", getSubpartners);
+router.get("/Subpartner/:id", getSubpartnerDatails);
+router.post("/change-password",  changePassword);
+
+
 router.get("/SubpartnerCount", getSubpartnerCount);
 
 router.get("/subpartnerCount", subpartnerCount);

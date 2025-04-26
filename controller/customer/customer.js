@@ -107,4 +107,70 @@ exports.registerCustomer = async (req, res) => {
       return res.status(500).json({ success: false, message: "Internal server error" });
     }
   };
+
+  exports.updateKycStatus = async (req, res) => {
+    try {
+      const { entityId, status } = req.query;
   
+      if (!entityId || !status) {
+        return res.status(400).json({ success: false, message: "entityId and status are required" });
+      }
+  
+      const customer = await Customer.findOneAndUpdate(
+        { entityId },         // find by entityId
+        { status },           // update status
+        { new: true }          // return updated document
+      );
+  
+      if (customer) {
+        return res.status(200).json({ success: true, message: "Status updated successfully", customer });
+      } else {
+        return res.status(404).json({ success: false, message: "Customer not found" });
+      }
+  
+    } catch (error) {
+      console.error("Error updating customer status:", error);
+      return res.status(500).json({ success: false, message: "Internal server error" });
+    }
+  };
+  
+  
+  exports.AgentReport=async (req, res) => {
+    try {
+      const { agentId, fromDate, toDate } = req.query;
+  
+      const query = {
+        agentId,
+        createdAt: {
+          $gte: new Date(fromDate),
+          $lte: new Date(toDate),
+        },
+      };
+  
+      // Find MinKYC and FullKYC counts separately
+      const [minKYCCount, fullKYCCount] = await Promise.all([
+        Customer.countDocuments({ ...query, status: 'minKYC' }),
+        Customer.countDocuments({ ...query, status: 'fullKYC' }),
+      ]);
+  
+      // Find all customers matching the date range & agent
+      const customers = await Customer.find(query).select('kitNo tagClass status');
+  
+      res.json({
+        success: true,
+        data: {
+          minKYCCount,
+          fullKYCCount,
+          customers: customers.map(cust => ({
+            contactNo:cust.contactNo,
+            kitNo: cust.kitNo,
+            tagClass: cust.tagClass,
+            status: cust.status,
+          })),
+        },
+      });
+    } catch (error) {
+      console.error('Error fetching KYC report:', error);
+      res.status(500).json({ success: false, message: 'Server Error' });
+    }
+  }

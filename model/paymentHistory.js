@@ -1,7 +1,7 @@
 const mongoose = require("mongoose");
 
 const paymentHistorySchema = new mongoose.Schema({
-  agentId: { type: mongoose.Schema.Types.ObjectId, ref: "Agent" },
+  agentId: { type: mongoose.Schema.Types.ObjectId, ref: "agent" },
   agentName: { type: String,  },
   orderId: { type: String, },
   paymentId: { type: String, },
