@@ -20,23 +20,23 @@ exports.registerCustomer = async (req, res) => {
       console.log("Customer:", customer);
   
       // 1. Generate OTP
-      const otpRes = await axios.post(
-        'https://kycuat.yappay.in/kyc/customer/generate/otp',
-        {
-          entityId: "M2PPTEST",
-          mobileNumber: `+91${customerNumber}`,
-          businessType: "LQFLEET115",
-          entityType: "CUSTOMER"
-        },
-        {
-          headers: {
-            TENANT: 'LQFLEET',
-            partnerId: 'LQFLEET',
-            partnerToken: 'Basic TFFGTEVFVA',
-            'Content-Type': 'application/json'
-          }
-        }
-      );
+      // const otpRes = await axios.post(
+      //   'https://kycuat.yappay.in/kyc/customer/generate/otp',
+      //   {
+      //     entityId: "M2PPTEST",
+      //     mobileNumber: `+91${customerNumber}`,
+      //     businessType: "LQFLEET115",
+      //     entityType: "CUSTOMER"
+      //   },
+      //   {
+      //     headers: {
+      //       TENANT: 'LQFLEET',
+      //       partnerId: 'LQFLEET',
+      //       partnerToken: 'Basic TFFGTEVFVA',
+      //       'Content-Type': 'application/json'
+      //     }
+      //   }
+      // );
   
       // 2. Get PAN Address
       const panRes = await axios.post(
@@ -70,7 +70,7 @@ exports.registerCustomer = async (req, res) => {
   
       // ✅ Send response
       res.status(200).json({
-        otpResponse: otpRes.data,
+        // otpResponse: otpRes.data,
         panAddress: panRes.data.data || {},
         vehicleDetails: tagRes.data.result?.vehicleDetails || [],
         customer: customer // This will now always return valid customer object
@@ -116,7 +116,7 @@ exports.registerCustomer = async (req, res) => {
         return res.status(400).json({ success: false, message: "entityId and status are required" });
       }
   
-      const customer = await Customer.findOneAndUpdate(
+      const customer = await Customer.findOneAndUpdate( 
         { entityId },         // find by entityId
         { status },           // update status
         { new: true }          // return updated document
@@ -149,13 +149,14 @@ exports.registerCustomer = async (req, res) => {
   
       // Find MinKYC and FullKYC counts separately
       const [minKYCCount, fullKYCCount] = await Promise.all([
-        Customer.countDocuments({ ...query, status: 'minKYC' }),
-        Customer.countDocuments({ ...query, status: 'fullKYC' }),
+        Customer.countDocuments({ ...query, status: 'minKyc' }),
+        Customer.countDocuments({ ...query, status: 'fullKyc' }),
       ]);
   
       // Find all customers matching the date range & agent
-      const customers = await Customer.find(query).select('kitNo tagClass status');
+      const customers = await Customer.find(query).select('kitNo tagClass contactNo status');
   
+   
       res.json({
         success: true,
         data: {

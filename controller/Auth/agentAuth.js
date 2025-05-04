@@ -139,7 +139,9 @@ async function agentLogin(req, res) {
       id: agent._id,
       name: agent.name,
       email: agent.email,
-      status: agent.status
+      status: agent.status,
+      adminID:agent.adminID,
+      wallet:agent.wallet,
     };
 
     res.status(200).json({ success: "Logged in successfully", token, data: userData });

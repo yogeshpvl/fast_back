@@ -12,6 +12,7 @@ router.get("/:id", TagController.getTagById);
 router.get("/createdBy/:createdId", TagController.getTagsByCreatedBy); 
 
 router.get("/agent/:agentId", TagController.getTagsByAgent); 
+router.get("/agentnotstart/:agentId", TagController.getTagsByAgenDropdownt); 
 router.delete("/:id", TagController.deleteTag);
 router.put("/assign", TagController.assignTag);
 

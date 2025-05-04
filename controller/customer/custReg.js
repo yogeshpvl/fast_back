@@ -3,6 +3,8 @@ const axios = require('axios');
 const Customer = require('../../model/customer/customer');
 const generateEntityId = require('../../utils/generateEntityId');
 const agentModel = require('../../model/Auth/agentAuth');
+const TagModel = require('../../model/tags');
+
 
 
 const removeFromHotlist = async (kitNo) => {
@@ -12,7 +14,7 @@ const removeFromHotlist = async (kitNo) => {
       {
         kitNo,
         excCode: "01",
-        tagOperation: "ADD",
+        tagOperation: "REMOVE",
       },
       {
         headers: {
@@ -118,16 +120,16 @@ exports.registerCustomer = async (req, res) => {
 
 
 exports.registerVehicle = async (req, res) => {
-  const { kitNo, entityId, type,agentId,amount } = req.body;
+  const { entityId, type, agentId, amount } = req.body;
   const deductAmount = parseFloat(amount);
-  console.log("req.body",req.body)
+
 
   try {
     // Step 1: Remove from hotlist before registering
-    // const hotlistResponse = await removeFromHotlist(kitNo);
-    // console.log("Hotlist Removal Response:", hotlistResponse);
+   await removeFromHotlist(req.body.kitNo);
+   
 
-    // Step 2: Proceed with vehicle registration
+    // Step 2: Register vehicle
     const registrationResponse = await axios.post(
       "https://uat-fleetdrive.m2pfintech.com/core/Yappay/registration-manager/v3/register",
       {
@@ -143,28 +145,64 @@ exports.registerVehicle = async (req, res) => {
       }
     );
 
-    // Save to DB and return response
-    // Assuming you have a Vehicle model:
-    const savedVehicle = await Vehicle.create({
-      ...req.body,
-      registrationResponse: registrationResponse.data,
-    });
-    if(type === "Prepaid"){
-      const agent = await agentModel.findById(agentId);
-      agent.wallet -= deductAmount;
-      await agent.save();
-  
-    }
+    const registeredData = registrationResponse.data.result;
+    console.log("registrationResponse result:", registeredData);
+
+    // Step 3: Update Customer record with the correct kitNo and status
     const updatedCustomer = await Customer.findOneAndUpdate(
-      { entityId:entityId ,kitNo:req.body.kitNo},
-      { $set: {status:"VEHICLE REGISTERED"} },
+      { entityId: entityId },
+      {
+        $set: {
+          kitNo: registeredData.kitNo,
+          kycStatus: registeredData.kycStatus,
+          kycRefNo: registeredData.kycRefNo,
+          status: "VEHICLE REGISTERED",
+        },
+      },
       { new: true }
     );
-    
-    res.status(200).json({ success: true, vehicle: savedVehicle });
+
+    const tag = await TagModel.findOneAndUpdate(
+      { kitNo: registeredData.kitNo },
+      {
+        $set: {
+          status: registeredData.kycStatus,
+        },
+      },
+      { new: true }
+    );
+    // Step 4: Deduct wallet if prepaid
+    if (type === "Prepaid") {
+      const agent = await agentModel.findById(agentId);
+      if (!agent) {
+        return res.status(404).json({ success: false, message: "Agent not found" });
+      }
+      agent.wallet -= deductAmount;
+      await agent.save();
+    }
+
+    res.status(200).json({ success: true, customer: updatedCustomer });
   } catch (err) {
-    console.error("Error response data:", err.response.data);
-    console.error("Registration Error:", err.message);
-    res.status(500).json({ success: false, message: err.message });
+    if (err.response) {
+      console.error("Registration API Error Status:", err.response.status);
+      console.error("Registration API Error Data:", err.response.data);
+      res.status(err.response.status).json({
+        success: false,
+        message: err.response.data.shortMessage || "Registration failed",
+        details: err.response.data,
+      });
+    } else if (err.request) {
+      console.error("No response received:", err.request);
+      res.status(500).json({
+        success: false,
+        message: "No response received from registration API",
+      });
+    } else {
+      console.error("Unexpected Error:", err.message);
+      res.status(500).json({
+        success: false,
+        message: err.message,
+      });
+    }
   }
 };

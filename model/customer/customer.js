@@ -11,8 +11,11 @@ const customerSchema = new mongoose.Schema({
   agentId:String,
   contactNo: String,
   emailAddress: String,
+  carNumber:String,
   panNumber: String,
   kitNo: String,
+  kycStatus:String,
+  kycRefNo:String,
   tagClass:{
     type: String,
   },

@@ -1,36 +1,33 @@
 const TagModel = require("../model/tags");
 const agentModel =require("../model/Auth/agentAuth");
-
+const mongoose = require("mongoose");
 
 class TagController {
   // Create a new tag
 
   async createTag(req, res) {
     try {
-      const { tags,  } = req.body;
+      const { tags, createdBy, createdId } = req.body;
   
-     
-
-  
-      // Prepare each tag for insertion
       const newTags = tags.map(tag => {
         const assignedTo = tag.assignedTo === "" ? undefined : tag.assignedTo;
   
         return {
           ...tag,
           assignedTo,
-         
+          createdBy,
+          createdId,
         };
       });
   
       const insertedTags = await TagModel.insertMany(newTags);
       res.status(201).json(insertedTags);
-  
     } catch (error) {
       console.error("error", error);
       res.status(500).json({ message: error.message });
     }
   }
+  
   
 
 
@@ -43,9 +40,6 @@ class TagController {
       return res.status(500).json({ message: err.message });
     }
   }
-
-
-
 
   async  getAllTagsCounts(req, res) {
     try {
@@ -74,7 +68,7 @@ class TagController {
     try {
       const { agentId } = req.params;
       console.log("Agent", agentId);
-      const tags = await TagModel.find({ assignedTo: agentId }).populate("assignedTo", "name email").sort({_id:-1});
+      const tags = await TagModel.find({ assignedTo: agentId}).populate("assignedTo", "name email").sort({_id:-1});
       if (!tags.length) return res.status(404).json({ message: "No tags found for this agent" });
     
       return res.status(200).json(tags);
@@ -82,6 +76,38 @@ class TagController {
       return res.status(500).json({ message: err.message });
     }
   }
+
+  async getTagsByAgenDropdownt(req, res) {
+    try {
+      const { agentId } = req.params;
+      const { tagClass } = req.query;
+  
+      console.log("agentId", agentId, tagClass);
+  
+      const query = {
+        assignedTo: new mongoose.Types.ObjectId(agentId), 
+        status: "Assigned",
+      };
+  
+      if (tagClass) {
+        query.tagClass = tagClass;
+      }
+  
+      const tags = await TagModel.find(query)
+        .populate("assignedTo", "name email")
+        .sort({ _id: -1 });
+  
+      if (!tags.length) {
+        return res.status(404).json({ message: "No tags found for this agent" });
+      }
+  
+      return res.status(200).json(tags);
+    } catch (err) {
+      console.error("Error in getTagsByAgenDropdownt:", err);
+      return res.status(500).json({ message: err.message });
+    }
+  }
+
   async getTagsByCreatedBy(req, res) {
     try {
       const { createdId } = req.params;

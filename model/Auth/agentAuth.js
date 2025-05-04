@@ -52,6 +52,11 @@ const agentSchema = new mongoose.Schema(
       required: true,
       default: "pending",
     },
+    agentStatus: {
+      type: String,
+      required: true,
+      default: "active",
+    },
     wallet: {
       type: Number,
       required: true,

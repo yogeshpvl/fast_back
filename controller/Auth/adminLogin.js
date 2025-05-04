@@ -206,7 +206,7 @@ async function getSubpartners(req, res) {
 
 async function getSubpartnerDatails(req, res) {
   try {
-    const {id}=req.params.id
+    const {id}=req.params
     const data = await AdminModel.findOne({_id:id}).sort({ _id: -1 });
 
     if (data) {

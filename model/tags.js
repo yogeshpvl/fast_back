@@ -8,7 +8,7 @@ const tagsSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    // enum: ["active", "inactive", "assigned"], 
+   default:"inactive"
 
   },
   kitType: {

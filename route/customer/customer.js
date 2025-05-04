@@ -5,7 +5,7 @@ const { registerCustomer ,findentityID,updateKycStatus,AgentReport} = require('.
 router.post('/register', registerCustomer);
 router.get('/entityID', findentityID);
 router.put('/updateKycStatus', updateKycStatus);
-router.put('/AgentReport', AgentReport);
+router.get('/AgentReport', AgentReport);
 
 
 
