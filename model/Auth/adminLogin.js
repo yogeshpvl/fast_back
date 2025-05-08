@@ -46,10 +46,10 @@ const adminSchema = new mongoose.Schema(
       type: String,
       required: true,
       default: "active",
+      enum: ["active", "blocked"], // Restrict status to 'active' or 'blocked'
     },
     type: {
       type: String,
-  
     },
     fastTagPrice: {
       basePrice: {
@@ -82,6 +82,12 @@ const adminSchema = new mongoose.Schema(
       type: Number,
       required: true,
       default: 0,
+    },
+    resetToken: {
+      type: String,
+    },
+    resetTokenExpiry: {
+      type: Date,
     },
   },
   {
