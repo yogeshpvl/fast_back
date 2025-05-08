@@ -16,7 +16,7 @@ const razorpay = new Razorpay({
 });
 
 mongoose
-  .connect(process.env.DATABASE, {
+  .connect("mongodb+srv://fastTag:fastTag@cluster0.87ydf.mongodb.net/", {
     useNewUrlParser: true,
     useUnifiedTopology: true,
   })
@@ -176,7 +176,7 @@ app.get("/wallet-details/:agentId", async (req, res) => {
 
 
 
-const PORT = process.env.PORT || 8000;
+const PORT = process.env.PORT || 8500;
 app.listen(PORT, () => {
   console.log("Server is running on", PORT);
 });
